@@ -1,0 +1,47 @@
+package org.oop.exercises.pricing.interfaces;
+
+import org.oop.exercises.pricing.dtos.PricingDto;
+import org.oop.exercises.pricing.enums.DiscountType;
+import org.oop.exercises.pricing.utils.DiscountContext;
+
+import java.math.BigDecimal;
+import java.util.Set;
+
+public interface PricingStrategy {
+    default PricingDto calculatePrice(PricingDto pricingDto) {
+        var item = pricingDto.item();
+
+        var baseDiscountContext = DiscountContext.of(DiscountType.NONE, 0.0);
+
+        var hasOtherAppliedDiscounts = pricingDto.appliedDiscounts().stream()
+                .anyMatch(discountContext -> discountContext.getDiscountType() != DiscountType.NONE);
+
+        if(hasOtherAppliedDiscounts)
+            throw new IllegalStateException("Cannot apply NONE discount when other discounts are applied");
+
+        var hasOtherPendingDiscounts = pricingDto.pendingDiscounts().stream()
+                .anyMatch(discountContext -> discountContext.getDiscountType() != DiscountType.NONE);
+
+        if(hasOtherPendingDiscounts)
+            throw new IllegalStateException("If NONE discount is pending, no other discounts can be pending");
+
+        if(!pricingDto.billedQuantity().equals(pricingDto.quantity()))
+            throw new IllegalStateException("Billed quantity must be equal to quantity when applying NONE discount");
+
+        var pricePerUnit = item.getUnitPriceWithTax();
+
+        var subTotal = pricePerUnit.multiply(BigDecimal.valueOf(pricingDto.quantity()));
+
+        var totalTax = item.getTaxAmountPerUnit().multiply(BigDecimal.valueOf(pricingDto.quantity()));
+
+        return new PricingDto(
+                item,
+                Set.of(baseDiscountContext),
+                pricingDto.pendingDiscounts(),
+                pricingDto.quantity(),
+                pricingDto.billedQuantity(),
+                subTotal,
+                totalTax
+        );
+    }
+}
