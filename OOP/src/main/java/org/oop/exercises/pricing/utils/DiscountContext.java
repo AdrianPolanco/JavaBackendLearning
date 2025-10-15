@@ -25,6 +25,9 @@ public class DiscountContext {
             return new DiscountContext(discountType, discountPercentage);
         }
 
+        if(discountPercentage != 0.0)
+            throw new IllegalArgumentException("Percentage must be 0 for NONE or BUNDLE");
+
         // For NONE or BUNDLE, ignore percentage
         return new DiscountContext(discountType, 0.0);
     }

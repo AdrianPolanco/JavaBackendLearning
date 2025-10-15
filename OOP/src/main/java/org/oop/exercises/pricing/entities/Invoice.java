@@ -17,14 +17,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Invoice {
-    private Integer id;
-    private Item item;
-    private Integer billableQuantity;
-    private BigDecimal totalPrice;
-    private BigDecimal taxAmount;
-    private LocalDateTime createdAt;
-    private Set<DiscountContext> appliedDiscounts;
-    private static Map<DiscountType, PricingStrategy> pricingStrategies = Map.of(
+    private final Integer id;
+    private final Item item;
+    private final Integer billableQuantity;
+    private final BigDecimal totalPrice;
+    private final BigDecimal taxAmount;
+    private final LocalDateTime createdAt;
+    private final Set<DiscountContext> appliedDiscounts;
+    private static final Map<DiscountType, PricingStrategy> pricingStrategies = Map.of(
             DiscountType.NONE, new StandardPricingStrategy(),
             DiscountType.DISCOUNT, new DiscountPricingStrategy(),
             DiscountType.BUNDLE, new BundlePricingStrategy()
@@ -54,62 +54,16 @@ public class Invoice {
         return appliedDiscounts.stream().map(DiscountContext::getDiscountType).collect(Collectors.toSet());
     }
 
-    /*private void setDiscountTypes(Set<DiscountContext> discountContexts) {
-        var currentDiscountIsNone = this.getDiscountTypes().contains(DiscountType.NONE) && this.getDiscountTypes().size() == 1;
-
-        var discountTypes = this.getDiscountTypes();
-
-        var incomingDiscountIsNone = !discountTypes.isEmpty()
-                && discountTypes.contains(DiscountType.NONE) && discountTypes.size() == 1;
-
-        if(currentDiscountIsNone && incomingDiscountIsNone){
-            System.out.println("No changes in discount types, both current and incoming are NONE");
-            return;
-        }
-
-        if(discountTypes.contains(DiscountType.NONE) && discountTypes.size() > 1){
-            System.out.println("Removing NONE from discount types as other discounts are present");
-            discountTypes.remove(DiscountType.NONE);
-        }
-
-        if(incomingDiscountIsNone){
-            this.discountContexts = Set.of(DiscountContext.of(DiscountType.NONE, 0.0));
-        }
-
-        boolean hasChanged = !this.getDiscountTypes().equals(discountTypes);
-
-        this.discountContexts = discountContexts;
-
-        if(hasChanged) recalculatePricing();
-    }
-
-    public void setDiscountPercentage(Double discountPercentage){
-        if(discountPercentage == null || discountPercentage < 0 || discountPercentage > 100){
-            throw new IllegalArgumentException("Discount percentage must be between 0 and 100");
-        }
-
-        if(!this.getDiscountTypes().contains(DiscountType.DISCOUNT)){
-            throw new IllegalArgumentException("Cannot set discount percentage when DISCOUNT type is not applied");
-        }
-
-        discountContexts = discountContexts.stream()
-                .map(dc -> {
-                    if(dc.getDiscountType() == DiscountType.DISCOUNT){
-                        return DiscountContext.of(DiscountType.DISCOUNT, discountPercentage);
-                    }
-                    return dc;
-                })
-                .collect(Collectors.toSet());
-    }*/
-
-    public Set<DiscountContext> getDiscountPercentage(){
-        return appliedDiscounts.stream().filter(
-                discountContext -> discountContext.getDiscountType() == DiscountType.DISCOUNT
-        ).collect(Collectors.toSet());
+    public Set<DiscountContext> getAppliedDiscounts(){
+        return appliedDiscounts;
     }
 
     public Integer getBillableQuantity() {
         return billableQuantity;
+    }
+
+    public Integer getQuantity(){
+        return item.getQuantity();
     }
 
     public BigDecimal getTotalPrice() {
@@ -124,39 +78,42 @@ public class Invoice {
         return createdAt;
     }
 
-    /*private void recalculatePricing(){
-        var appliableStrategies = discountContexts.stream()
-                .map(dc -> pricingStrategies.get(dc.getDiscountType()))
-                .collect(Collectors.toSet());
-
-        totalPrice = appliableStrategies.stream()
-                .map(pricingStrategy -> pricingStrategy.calculatePrice());
-    }*/
-
     public static Invoice of(PricingDto pricingDto){
         var item = pricingDto.item();
         var quantity = pricingDto.quantity();
         var billableQuantity = item.getQuantity();
         var pendingDiscounts = pricingDto.pendingDiscounts();
-        var isBundleDiscountApplied = pendingDiscounts.stream()
+        var isBundleDiscountApplied = pricingDto.appliedDiscounts().stream()
                 .anyMatch(dc -> dc.getDiscountType() == DiscountType.BUNDLE);
+        var isBundleDiscountPending = pricingDto.pendingDiscounts().stream()
+                .anyMatch(dc -> dc.getDiscountType() == DiscountType.BUNDLE);
+        var isThereAnyOtherAppliedDiscount = pricingDto.appliedDiscounts().stream()
+                .anyMatch(dc -> dc.getDiscountType() != DiscountType.NONE);
+
 
         // if(item == null) throw new IllegalArgumentException("Item cannot be null");
         if(quantity == null || quantity <= 0)
             throw new IllegalArgumentException("Quantity must be greater than zero");
 
-        if(pendingDiscounts.isEmpty())
-            pendingDiscounts.add(DiscountContext.of(DiscountType.NONE, 0.0));
+        if(!quantity.equals(item.getQuantity()))
+            throw new IllegalArgumentException("Item quantity must be equal to the requested quantity");
 
-        if(!quantity.equals(billableQuantity) && !isBundleDiscountApplied){
-            throw new IllegalArgumentException("If quantity is different than billable quantity, BUNDLE discount must be applied");
+        if(pendingDiscounts.isEmpty() && !isThereAnyOtherAppliedDiscount)
+            pricingDto.pendingDiscounts().add(DiscountContext.of(DiscountType.NONE, 0.0));
+
+        if(pendingDiscounts.isEmpty()) {
+            System.out.println("Price calculation logic is completed, there are no pending discounts");
+            throw new IllegalArgumentException("Price calculation logic is completed, there are no pending discounts");
+        }
+
+        if(!quantity.equals(billableQuantity) && !(isBundleDiscountApplied || isBundleDiscountPending)){
+            throw new IllegalArgumentException("If quantity is different than billable quantity, BUNDLE discount must be applied or pending");
         }
 
         var newPricingDto = pricingDto;
 
         for(DiscountContext discountContext : pendingDiscounts){
             var strategy = Invoice.pricingStrategies.get(discountContext.getDiscountType());
-
             newPricingDto = strategy.calculatePrice(newPricingDto);
         }
 

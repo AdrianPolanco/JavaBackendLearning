@@ -17,22 +17,22 @@ public interface PricingStrategy {
                 .anyMatch(discountContext -> discountContext.getDiscountType() != DiscountType.NONE);
 
         if(hasOtherAppliedDiscounts)
-            throw new IllegalStateException("Cannot apply NONE discount when other discounts are applied");
+            throw new IllegalArgumentException("Cannot apply NONE discount when other discounts are applied");
 
         var hasOtherPendingDiscounts = pricingDto.pendingDiscounts().stream()
                 .anyMatch(discountContext -> discountContext.getDiscountType() != DiscountType.NONE);
 
         if(hasOtherPendingDiscounts)
-            throw new IllegalStateException("If NONE discount is pending, no other discounts can be pending");
+            throw new IllegalArgumentException("NONE discount calculation logic does not apply since there are other pending discounts");
 
         if(!pricingDto.billedQuantity().equals(pricingDto.quantity()))
-            throw new IllegalStateException("Billed quantity must be equal to quantity when applying NONE discount");
+            throw new IllegalArgumentException("Billed quantity must be equal to quantity when applying NONE discount");
 
         var pricePerUnit = item.getUnitPriceWithTax();
 
         var subTotal = pricePerUnit.multiply(BigDecimal.valueOf(pricingDto.quantity()));
 
-        var totalTax = item.getTaxAmountPerUnit().multiply(BigDecimal.valueOf(pricingDto.quantity()));
+        var totalTax = item.getTaxAmountPerUnit().multiply(BigDecimal.valueOf(pricingDto.billedQuantity()));
 
         return new PricingDto(
                 item,

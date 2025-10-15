@@ -7,12 +7,13 @@ import org.oop.exercises.pricing.interfaces.PricingStrategy;
 import org.oop.exercises.pricing.utils.DiscountContext;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 
 public class BundlePricingStrategy implements PricingStrategy {
     @Override
     public PricingDto calculatePrice(PricingDto pricingDto) {
         var item = pricingDto.item();
-        var appliedDiscounts = pricingDto.appliedDiscounts();
+        var appliedDiscounts = new HashSet<>(pricingDto.appliedDiscounts());
 
         var wasBundleApplied = appliedDiscounts.stream().anyMatch(
                 discountContext -> discountContext.getDiscountType() == DiscountType.BUNDLE
@@ -22,7 +23,7 @@ public class BundlePricingStrategy implements PricingStrategy {
             return pricingDto; // Ya se aplico el descuento de bundle, no hacer nada
         }
 
-        var pendingDiscounts = pricingDto.pendingDiscounts();
+        var pendingDiscounts = new HashSet<>(pricingDto.pendingDiscounts());
 
         var isBundlePending = pendingDiscounts.stream().anyMatch(
                 discountContext -> discountContext.getDiscountType() == DiscountType.BUNDLE

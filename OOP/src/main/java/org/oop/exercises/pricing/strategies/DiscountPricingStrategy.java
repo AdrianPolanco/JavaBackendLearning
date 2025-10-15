@@ -6,13 +6,14 @@ import org.oop.exercises.pricing.enums.TaxRate;
 import org.oop.exercises.pricing.interfaces.PricingStrategy;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 public class DiscountPricingStrategy implements PricingStrategy {
     @Override
     public PricingDto calculatePrice(PricingDto pricingDto) {
         var item = pricingDto.item();
-        var appliedDiscounts = pricingDto.appliedDiscounts();
+        var appliedDiscounts = new HashSet<>(pricingDto.appliedDiscounts());
         var pendingDiscounts = pricingDto.pendingDiscounts().stream().filter(
                 discountContext -> discountContext.getDiscountType() == DiscountType.DISCOUNT
         ).collect(Collectors.toSet());
