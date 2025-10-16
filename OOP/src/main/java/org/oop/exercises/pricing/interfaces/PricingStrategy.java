@@ -25,12 +25,12 @@ public interface PricingStrategy {
         if(hasOtherPendingDiscounts)
             throw new IllegalArgumentException("NONE discount calculation logic does not apply since there are other pending discounts");
 
-        if(!pricingDto.billedQuantity().equals(pricingDto.quantity()))
+        if(!pricingDto.billedQuantity().equals(pricingDto.item().getQuantity()))
             throw new IllegalArgumentException("Billed quantity must be equal to quantity when applying NONE discount");
 
         var pricePerUnit = item.getUnitPriceWithTax();
 
-        var subTotal = pricePerUnit.multiply(BigDecimal.valueOf(pricingDto.quantity()));
+        var subTotal = pricePerUnit.multiply(BigDecimal.valueOf(pricingDto.item().getQuantity()));
 
         var totalTax = item.getTaxAmountPerUnit().multiply(BigDecimal.valueOf(pricingDto.billedQuantity()));
 
@@ -38,7 +38,6 @@ public interface PricingStrategy {
                 item,
                 Set.of(baseDiscountContext),
                 pricingDto.pendingDiscounts(),
-                pricingDto.quantity(),
                 pricingDto.billedQuantity(),
                 subTotal,
                 totalTax

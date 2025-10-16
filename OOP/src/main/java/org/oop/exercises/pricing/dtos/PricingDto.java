@@ -9,7 +9,6 @@ import java.util.Set;
 public record PricingDto(Item item,
                          Set<DiscountContext> appliedDiscounts,
                          Set<DiscountContext> pendingDiscounts,
-                         Integer quantity,
                          Integer billedQuantity,
                          BigDecimal currentTotal,
                          BigDecimal currentTaxAmount) {

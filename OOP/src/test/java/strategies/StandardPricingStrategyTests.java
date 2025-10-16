@@ -29,7 +29,7 @@ public class StandardPricingStrategyTests {
         assertThat(invoice.getAppliedDiscounts()).contains(DiscountContext.of(DiscountType.NONE, 0.0))
                 .hasSize(1);
 
-        assertThat(invoice.getBillableQuantity()).isEqualTo(invoice.getQuantity());
+        assertThat(invoice.getBilledQuantity()).isEqualTo(invoice.getQuantity());
 
         assertThat(invoice.getTotalTaxAmount())
                 .isEqualTo(BigDecimal.valueOf(108).setScale(2, RoundingMode.HALF_UP));
@@ -43,8 +43,7 @@ public class StandardPricingStrategyTests {
                 pricingDto.item(),
                 pricingDto.appliedDiscounts(),
                 pricingDto.pendingDiscounts(),
-                pricingDto.quantity(),
-                pricingDto.billedQuantity() + 1,
+                pricingDto.billedQuantity() - 1,
                 pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
@@ -53,37 +52,33 @@ public class StandardPricingStrategyTests {
                 pricingDto.item(),
                 pricingDto.appliedDiscounts(),
                 pricingDto.pendingDiscounts(),
-                2,
-                2,
+                pricingDto.billedQuantity() - 1,
                 pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
         var pricingDtoWithNullQuantity = new PricingDto(
-                pricingDto.item(),
+                new Item("Book", BigDecimal.valueOf(200), null),
                 pricingDto.appliedDiscounts(),
                 pricingDto.pendingDiscounts(),
                 null,
-                2,
                 pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
         var pricingDtoWithZeroQuantity = new PricingDto(
-                pricingDto.item(),
+                new Item("Book", BigDecimal.valueOf(200), 0),
                 pricingDto.appliedDiscounts(),
                 pricingDto.pendingDiscounts(),
-                0,
                 0,
                 pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
         var pricingDtoWithNegativeQuantity = new PricingDto(
-                pricingDto.item(),
+                new Item("Book", BigDecimal.valueOf(200), -1),
                 pricingDto.appliedDiscounts(),
                 pricingDto.pendingDiscounts(),
-                -1,
                 -1,
                 pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
@@ -91,11 +86,11 @@ public class StandardPricingStrategyTests {
 
         assertThatThrownBy(() -> Invoice.of(pricingDtoWithDifferentBilledQuantity))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Billed quantity must be equal to quantity when applying NONE discount");
+                .hasMessage("If quantity is different than billable quantity, BUNDLE discount must be applied or pending");
 
         assertThatThrownBy(() -> Invoice.of(pricingDtoWithDifferentQuantityThatItem))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Item quantity must be equal to the requested quantity");
+                .hasMessage("If quantity is different than billable quantity, BUNDLE discount must be applied or pending");
 
         assertThatThrownBy(() -> Invoice.of(pricingDtoWithNullQuantity))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -120,7 +115,6 @@ public class StandardPricingStrategyTests {
                 pricingDto.item(),
                 new LinkedHashSet<>(){{add(bundleContext);}},
                 new LinkedHashSet<>(){{add(noneContext);}},
-                pricingDto.quantity(),
                 pricingDto.billedQuantity(),
                 pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
@@ -130,7 +124,6 @@ public class StandardPricingStrategyTests {
                 pricingDto.item(),
                 new LinkedHashSet<>(),
                 new LinkedHashSet<>(){{ add(noneContext); add(bundleContext); }},
-                pricingDto.quantity(),
                 pricingDto.billedQuantity(),
                 pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
@@ -142,7 +135,6 @@ public class StandardPricingStrategyTests {
                     add(DiscountContext.of(DiscountType.BUNDLE, 0.0));
                 }},
                 pricingDto.pendingDiscounts(),
-                pricingDto.quantity(),
                 pricingDto.billedQuantity(),
                 pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
@@ -187,7 +179,6 @@ public class StandardPricingStrategyTests {
                 item,
                 new HashSet<>(),
                 new HashSet<>(),
-                item.getQuantity(),
                 item.getQuantity(),
                 item.getTotalPrice(),
                 item.getTaxAmountPerUnit().multiply(BigDecimal.valueOf(item.getQuantity()))

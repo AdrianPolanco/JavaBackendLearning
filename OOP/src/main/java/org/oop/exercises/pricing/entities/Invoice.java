@@ -18,7 +18,7 @@ import java.util.Set;
 public class Invoice {
     private final Integer id;
     private final Item item;
-    private final Integer billableQuantity;
+    private final Integer billedQuantity;
     private final BigDecimal totalPrice;
     private final BigDecimal taxAmount;
     private final LocalDateTime createdAt;
@@ -29,12 +29,12 @@ public class Invoice {
             DiscountType.BUNDLE, new BundlePricingStrategy()
     );
 
-    private Invoice(Integer id, Item item, Integer billableQuantity, BigDecimal totalPrice, BigDecimal taxAmount, Set<DiscountContext> appliedDiscounts) {
+    private Invoice(Integer id, Item item, Integer billedQuantity, BigDecimal totalPrice, BigDecimal taxAmount, Set<DiscountContext> appliedDiscounts) {
         this.id = id;
         this.item = item;
         // EnumSet.of() usa menos memoria, es mas rapido y esta mas optimizado para enums que HashSet
         // this.discountTypes = EnumSet.of(DiscountType.NONE);
-        this.billableQuantity = billableQuantity;
+        this.billedQuantity = billedQuantity;
         this.totalPrice = totalPrice;
         this.createdAt = LocalDateTime.now();
         this.appliedDiscounts = appliedDiscounts;
@@ -53,8 +53,8 @@ public class Invoice {
         return appliedDiscounts;
     }
 
-    public Integer getBillableQuantity() {
-        return billableQuantity;
+    public Integer getBilledQuantity() {
+        return billedQuantity;
     }
 
     public Integer getQuantity(){
@@ -75,13 +75,13 @@ public class Invoice {
 
     public static Invoice of(PricingDto pricingDto){
         var item = pricingDto.item();
-        var quantity = pricingDto.quantity();
-        var billableQuantity = item.getQuantity();
+        var quantity = pricingDto.item().getQuantity();
+        var billableQuantity = pricingDto.billedQuantity();
         var pendingDiscounts = pricingDto.pendingDiscounts();
         var isBundleDiscountApplied = pricingDto.appliedDiscounts().stream()
                 .anyMatch(dc -> dc.getDiscountType() == DiscountType.BUNDLE);
-        var isBundleDiscountPending = pricingDto.pendingDiscounts().stream()
-                .anyMatch(dc -> dc.getDiscountType() == DiscountType.BUNDLE);
+        /*var isBundleDiscountPending = pricingDto.pendingDiscounts().stream()
+                .anyMatch(dc -> dc.getDiscountType() == DiscountType.BUNDLE);*/
         var isThereAnyOtherAppliedDiscount = pricingDto.appliedDiscounts().stream()
                 .anyMatch(dc -> dc.getDiscountType() != DiscountType.NONE);
 
@@ -90,8 +90,8 @@ public class Invoice {
         if(quantity == null || quantity <= 0)
             throw new IllegalArgumentException("Quantity must be greater than zero");
 
-        if(!quantity.equals(item.getQuantity()))
-            throw new IllegalArgumentException("Item quantity must be equal to the requested quantity");
+        if(billableQuantity == null || billableQuantity <= 0)
+            throw new IllegalArgumentException("Billable quantity must be greater than zero");
 
         if(pendingDiscounts.isEmpty() && !isThereAnyOtherAppliedDiscount)
             pricingDto.pendingDiscounts().add(DiscountContext.of(DiscountType.NONE, 0.0));
@@ -101,7 +101,7 @@ public class Invoice {
             throw new IllegalArgumentException("Price calculation logic is completed, there are no pending discounts");
         }
 
-        if(!quantity.equals(billableQuantity) && !(isBundleDiscountApplied || isBundleDiscountPending)){
+        if(!quantity.equals(billableQuantity) && !isBundleDiscountApplied){
             throw new IllegalArgumentException("If quantity is different than billable quantity, BUNDLE discount must be applied or pending");
         }
 

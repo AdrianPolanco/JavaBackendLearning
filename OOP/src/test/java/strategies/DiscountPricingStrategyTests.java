@@ -26,7 +26,6 @@ public class DiscountPricingStrategyTests {
                 new LinkedHashSet<>(),
                 new LinkedHashSet<>(){{add(discountContext);}},
                 13,
-                13,
                 item.getTotalPrice(),
                 item.getTaxAmountPerUnit()
         );
@@ -43,7 +42,7 @@ public class DiscountPricingStrategyTests {
         assertThat(invoice.getAppliedDiscounts()).contains(discountContext)
                 .hasSize(1);
 
-        assertThat(invoice.getBillableQuantity()).isEqualTo(invoice.getQuantity());
+        assertThat(invoice.getBilledQuantity()).isEqualTo(invoice.getQuantity());
     }
 
     @Test
@@ -57,7 +56,6 @@ public class DiscountPricingStrategyTests {
                 item,
                 new LinkedHashSet<>(),
                 new LinkedHashSet<>(){{add(discountContext1); add(discountContext2);}},
-                7,
                 7,
                 item.getTotalPrice(),
                 item.getTaxAmountPerUnit()
@@ -76,7 +74,7 @@ public class DiscountPricingStrategyTests {
         assertThat(invoice.getAppliedDiscounts()).contains(discountContext1, discountContext2)
                 .hasSize(2);
 
-        assertThat(invoice.getBillableQuantity()).isEqualTo(invoice.getQuantity());
+        assertThat(invoice.getBilledQuantity()).isEqualTo(invoice.getQuantity());
     }
 
     @Test
@@ -89,7 +87,6 @@ public class DiscountPricingStrategyTests {
                 item,
                 new LinkedHashSet<>(){{add(discountContext2);}},
                 new LinkedHashSet<>(){{add(discountContext1);}},
-                7,
                 7,
                 item.getTotalPrice(),
                 item.getTaxAmountPerUnit()

@@ -40,7 +40,6 @@ public class DiscountPricingStrategy implements PricingStrategy {
 
         var currentSubtotal = pricingDto.currentTotal();
         var currentTaxAmount = pricingDto.currentTaxAmount();
-        var quantity = pricingDto.quantity();
         var billedQuantity = pricingDto.billedQuantity();
 
         var newTotal = currentSubtotal;
@@ -48,18 +47,20 @@ public class DiscountPricingStrategy implements PricingStrategy {
 
         for(var pendingDiscount: discountContexts){
 
-            var discountPercentage = pendingDiscount.getDiscountPercentage() / 100;
+            var discountPercentage = BigDecimal.valueOf(pendingDiscount.getDiscountPercentage())
+                                        .divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP);
 
             newTotal = BigDecimal.ONE
-                        .subtract(BigDecimal.valueOf(discountPercentage))
-                        .multiply(newTotal)
-                        .setScale(2, RoundingMode.HALF_UP);
+                        .subtract(discountPercentage)
+                        .multiply(newTotal);
 
             System.out.println("New total after applying discount of " + pendingDiscount.getDiscountPercentage() + "%: " + newTotal);
 
-            newTaxAmount = newTotal.multiply(TaxRate.STANDARD.getStandardRate())
-                                    .setScale(2, RoundingMode.HALF_UP);
+            newTaxAmount = newTotal.multiply(TaxRate.STANDARD.getStandardRate());
         }
+
+        newTotal = newTotal.setScale(2, RoundingMode.HALF_UP);
+        newTaxAmount = newTaxAmount.setScale(2, RoundingMode.HALF_UP);
 
         appliedDiscounts.addAll(discountContexts);
         pendingDiscounts.removeAll(discountContexts);
@@ -68,7 +69,6 @@ public class DiscountPricingStrategy implements PricingStrategy {
                 item,
                 appliedDiscounts,
                 pendingDiscounts,
-                quantity,
                 billedQuantity,
                 newTotal,
                 newTaxAmount
