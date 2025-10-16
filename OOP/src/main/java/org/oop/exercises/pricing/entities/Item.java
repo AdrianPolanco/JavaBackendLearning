@@ -42,7 +42,7 @@ public class Item {
         return basePrice.multiply(TaxRate.STANDARD.getStandardRate()).setScale(2, RoundingMode.HALF_UP);
     }
 
-    public BigDecimal getSubtotalPrice() {
+    public BigDecimal getTotalPrice() {
         // BigDecimal does not support arithmetic operators directly, you must use methods
         // return basePrice + (basePrice * 0.18);
 

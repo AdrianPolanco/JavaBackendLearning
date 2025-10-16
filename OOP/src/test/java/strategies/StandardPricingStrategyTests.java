@@ -45,7 +45,7 @@ public class StandardPricingStrategyTests {
                 pricingDto.pendingDiscounts(),
                 pricingDto.quantity(),
                 pricingDto.billedQuantity() + 1,
-                pricingDto.item().getSubtotalPrice(),
+                pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
@@ -55,7 +55,7 @@ public class StandardPricingStrategyTests {
                 pricingDto.pendingDiscounts(),
                 2,
                 2,
-                pricingDto.item().getSubtotalPrice(),
+                pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
@@ -65,7 +65,7 @@ public class StandardPricingStrategyTests {
                 pricingDto.pendingDiscounts(),
                 null,
                 2,
-                pricingDto.item().getSubtotalPrice(),
+                pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
@@ -75,7 +75,7 @@ public class StandardPricingStrategyTests {
                 pricingDto.pendingDiscounts(),
                 0,
                 0,
-                pricingDto.item().getSubtotalPrice(),
+                pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
@@ -85,7 +85,7 @@ public class StandardPricingStrategyTests {
                 pricingDto.pendingDiscounts(),
                 -1,
                 -1,
-                pricingDto.item().getSubtotalPrice(),
+                pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
@@ -122,7 +122,7 @@ public class StandardPricingStrategyTests {
                 new LinkedHashSet<>(){{add(noneContext);}},
                 pricingDto.quantity(),
                 pricingDto.billedQuantity(),
-                pricingDto.item().getSubtotalPrice(),
+                pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
@@ -132,7 +132,7 @@ public class StandardPricingStrategyTests {
                 new LinkedHashSet<>(){{ add(noneContext); add(bundleContext); }},
                 pricingDto.quantity(),
                 pricingDto.billedQuantity(),
-                pricingDto.item().getSubtotalPrice(),
+                pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
@@ -144,7 +144,7 @@ public class StandardPricingStrategyTests {
                 pricingDto.pendingDiscounts(),
                 pricingDto.quantity(),
                 pricingDto.billedQuantity(),
-                pricingDto.item().getSubtotalPrice(),
+                pricingDto.item().getTotalPrice(),
                 pricingDto.item().getTaxAmountPerUnit()
         );
 
@@ -189,7 +189,7 @@ public class StandardPricingStrategyTests {
                 new HashSet<>(),
                 item.getQuantity(),
                 item.getQuantity(),
-                item.getSubtotalPrice(),
+                item.getTotalPrice(),
                 item.getTaxAmountPerUnit().multiply(BigDecimal.valueOf(item.getQuantity()))
         );
     }

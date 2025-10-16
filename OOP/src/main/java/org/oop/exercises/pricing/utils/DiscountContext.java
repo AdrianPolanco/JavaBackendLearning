@@ -22,6 +22,10 @@ public class DiscountContext {
             if (discountPercentage == null || discountPercentage <= 0) {
                 throw new IllegalArgumentException("Percentage must be > 0 for DISCOUNT");
             }
+
+            if(discountPercentage > 100)
+                throw new IllegalArgumentException("Percentage must be <= 100 for DISCOUNT");
+
             return new DiscountContext(discountType, discountPercentage);
         }
 

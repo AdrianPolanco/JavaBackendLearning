@@ -33,7 +33,7 @@ public class BundlePricingStrategy implements PricingStrategy {
             return pricingDto; // No hay descuento de bundle pendiente, no hacer nada
         }
 
-        var currentSubtotal = pricingDto.currentSubtotal();
+        var currentSubtotal = pricingDto.currentTotal();
         var currentTaxAmount = pricingDto.currentTaxAmount();
         var quantity = pricingDto.quantity();
 

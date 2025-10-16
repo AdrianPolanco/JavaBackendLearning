@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class Invoice {
     private final Integer id;
@@ -48,10 +47,6 @@ public class Invoice {
 
     public Item getItem() {
         return item;
-    }
-
-    public Set<DiscountType> getDiscountTypes() {
-        return appliedDiscounts.stream().map(DiscountContext::getDiscountType).collect(Collectors.toSet());
     }
 
     public Set<DiscountContext> getAppliedDiscounts(){
@@ -121,7 +116,7 @@ public class Invoice {
                 IdGenerator.nextInvoiceId(),
                 item,
                 newPricingDto.billedQuantity(),
-                newPricingDto.currentSubtotal(),
+                newPricingDto.currentTotal(),
                 newPricingDto.currentTaxAmount(),
                 newPricingDto.appliedDiscounts()
         );

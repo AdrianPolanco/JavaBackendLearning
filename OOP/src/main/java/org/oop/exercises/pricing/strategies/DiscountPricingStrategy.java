@@ -6,36 +6,63 @@ import org.oop.exercises.pricing.enums.TaxRate;
 import org.oop.exercises.pricing.interfaces.PricingStrategy;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
 public class DiscountPricingStrategy implements PricingStrategy {
     @Override
     public PricingDto calculatePrice(PricingDto pricingDto) {
         var item = pricingDto.item();
-        var appliedDiscounts = new HashSet<>(pricingDto.appliedDiscounts());
-        var pendingDiscounts = pricingDto.pendingDiscounts().stream().filter(
+        var appliedDiscounts = new LinkedHashSet<>(pricingDto.appliedDiscounts());
+        var discountContexts = pricingDto.pendingDiscounts().stream().filter(
                 discountContext -> discountContext.getDiscountType() == DiscountType.DISCOUNT
-        ).collect(Collectors.toSet());
-        var currentSubtotal = pricingDto.currentSubtotal();
+        ).collect(Collectors.toCollection(LinkedHashSet::new));
+
+        var pendingDiscounts = new LinkedHashSet<>(pricingDto.pendingDiscounts());
+
+        var somePendingDiscountIsInvalid = discountContexts.stream().anyMatch(
+                discountContext -> discountContext.getDiscountPercentage() < 0 || discountContext.getDiscountPercentage() > 100
+        );
+
+        var isThereNoneAppliedDiscount = appliedDiscounts.stream().anyMatch(
+                discountContext -> discountContext.getDiscountType() == DiscountType.NONE
+        );
+
+        if(somePendingDiscountIsInvalid){
+            throw new IllegalArgumentException("Invalid discount percentage");
+        }
+
+        if(isThereNoneAppliedDiscount) {
+            throw new IllegalArgumentException("There is a NONE discount applied, no other discount can be applied");
+        }
+
+        var currentSubtotal = pricingDto.currentTotal();
         var currentTaxAmount = pricingDto.currentTaxAmount();
         var quantity = pricingDto.quantity();
         var billedQuantity = pricingDto.billedQuantity();
 
-        var newSubtotal = currentSubtotal;
+        var newTotal = currentSubtotal;
         var newTaxAmount = currentTaxAmount;
 
-        for(var pendingDiscount: pendingDiscounts){
+        for(var pendingDiscount: discountContexts){
+
             var discountPercentage = pendingDiscount.getDiscountPercentage() / 100;
 
-            newSubtotal = newSubtotal.multiply(
-                    BigDecimal.ONE.subtract(newSubtotal.multiply(BigDecimal.valueOf(discountPercentage))));
+            newTotal = BigDecimal.ONE
+                        .subtract(BigDecimal.valueOf(discountPercentage))
+                        .multiply(newTotal)
+                        .setScale(2, RoundingMode.HALF_UP);
 
-            newTaxAmount = newSubtotal.multiply(TaxRate.STANDARD.getStandardRate());
+            System.out.println("New total after applying discount of " + pendingDiscount.getDiscountPercentage() + "%: " + newTotal);
 
-            appliedDiscounts.add(pendingDiscount);
-            appliedDiscounts.remove(pendingDiscount);
+            newTaxAmount = newTotal.multiply(TaxRate.STANDARD.getStandardRate())
+                                    .setScale(2, RoundingMode.HALF_UP);
         }
+
+        appliedDiscounts.addAll(discountContexts);
+        pendingDiscounts.removeAll(discountContexts);
 
         return new PricingDto(
                 item,
@@ -43,7 +70,7 @@ public class DiscountPricingStrategy implements PricingStrategy {
                 pendingDiscounts,
                 quantity,
                 billedQuantity,
-                newSubtotal,
+                newTotal,
                 newTaxAmount
         );
     }

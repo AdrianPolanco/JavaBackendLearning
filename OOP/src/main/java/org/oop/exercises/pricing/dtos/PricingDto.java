@@ -11,7 +11,7 @@ public record PricingDto(Item item,
                          Set<DiscountContext> pendingDiscounts,
                          Integer quantity,
                          Integer billedQuantity,
-                         BigDecimal currentSubtotal,
+                         BigDecimal currentTotal,
                          BigDecimal currentTaxAmount) {
 
 }
