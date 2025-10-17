@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
-public class DiscountPricingStrategy implements PricingStrategy {
+public final class DiscountPricingStrategy implements PricingStrategy {
     @Override
     public PricingDto calculatePrice(PricingDto pricingDto) {
         var item = pricingDto.item();
@@ -53,8 +53,6 @@ public class DiscountPricingStrategy implements PricingStrategy {
             newTotal = BigDecimal.ONE
                         .subtract(discountPercentage)
                         .multiply(newTotal);
-
-            System.out.println("New total after applying discount of " + pendingDiscount.getDiscountPercentage() + "%: " + newTotal);
 
             newTaxAmount = newTotal.multiply(TaxRate.STANDARD.getStandardRate());
         }

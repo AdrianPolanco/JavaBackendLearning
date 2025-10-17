@@ -7,11 +7,27 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class Order {
+public final class Order {
     private Integer id;
     private BigDecimal totalPrice;
     private List<Invoice> invoicesList;
     private LocalDateTime createdAt;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public BigDecimal getTotalPrice() {
+        return totalPrice;
+    }
+
+    public List<Invoice> getInvoicesList() {
+        return invoicesList;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
     private Order(Integer id, BigDecimal totalPrice, List<Invoice> invoicesList) {
         this.id = id;

@@ -12,7 +12,7 @@ import java.math.RoundingMode;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
-public class BundlePricingStrategy implements PricingStrategy {
+public final class BundlePricingStrategy implements PricingStrategy {
     @Override
     public PricingDto calculatePrice(PricingDto pricingDto) {
         var item = pricingDto.item();

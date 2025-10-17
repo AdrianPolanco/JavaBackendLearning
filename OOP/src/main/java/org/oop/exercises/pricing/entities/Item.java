@@ -6,7 +6,7 @@ import org.oop.exercises.pricing.utils.IdGenerator;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class Item {
+public final class Item {
     private Integer id;
     private String name;
     private BigDecimal basePrice;

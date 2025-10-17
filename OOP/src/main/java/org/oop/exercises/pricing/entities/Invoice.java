@@ -11,11 +11,9 @@ import org.oop.exercises.pricing.utils.IdGenerator;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
-public class Invoice {
+public final class Invoice {
     private final Integer id;
     private final Item item;
     private final Integer billedQuantity;
@@ -80,8 +78,6 @@ public class Invoice {
         var pendingDiscounts = pricingDto.pendingDiscounts();
         var isBundleDiscountApplied = pricingDto.appliedDiscounts().stream()
                 .anyMatch(dc -> dc.getDiscountType() == DiscountType.BUNDLE);
-        /*var isBundleDiscountPending = pricingDto.pendingDiscounts().stream()
-                .anyMatch(dc -> dc.getDiscountType() == DiscountType.BUNDLE);*/
         var isThereAnyOtherAppliedDiscount = pricingDto.appliedDiscounts().stream()
                 .anyMatch(dc -> dc.getDiscountType() != DiscountType.NONE);
 
@@ -97,7 +93,6 @@ public class Invoice {
             pricingDto.pendingDiscounts().add(DiscountContext.of(DiscountType.NONE, 0.0));
 
         if(pendingDiscounts.isEmpty()) {
-            System.out.println("Price calculation logic is completed, there are no pending discounts");
             throw new IllegalArgumentException("Price calculation logic is completed, there are no pending discounts");
         }
 
@@ -107,7 +102,7 @@ public class Invoice {
 
         var newPricingDto = pricingDto;
 
-        for(DiscountContext discountContext : pendingDiscounts){
+        for(DiscountContext discountContext : new LinkedHashSet<>(pendingDiscounts)){
             var strategy = Invoice.pricingStrategies.get(discountContext.getDiscountType());
             newPricingDto = strategy.calculatePrice(newPricingDto);
         }
